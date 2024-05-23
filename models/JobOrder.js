@@ -2,55 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const Indent = require('./Indent'); // Ensure the path to your Indent model is correct
 
-// Item Schema
-const itemSchema = new Schema({
-  pkgstype: {
-    type: String,
-    enum: [
-      'BAG', 'BOOK', 'BUNDLE', 'C BOX', 'LOOSE',
-      'MT', 'NOS', 'W BOX' 
-    ],
-    required: true
-  },
-  INVOICE_NO: { type: Number },
-  INVOICE_DATE: { type: Date, default: Date.now, required: true },
-  CONTENT:{type: String},
-  WEIGHT_TYPE: {
-    type: String,
-    enum: ['ACTUAL', 'TARE', 'VOLUMETRIC'],
-    required: true
-  },
-  VOL_UNIT: {
-    type: String,
-    enum: ['CMS', 'FEET', 'INCH'],
-    required: true
-  },
-  PKGS: { type: Number },
-  WEIGHT: { type: Number },
-  TARE: { type: Number },
-  CONTAINER: { type: Number },
-  NO_OF_VEHICLE: { type: Number },
-  REMARKS: { type: String }
-});
 
-// Total Schema
-const totalSchema = new Schema({
-  pkgs: { type: Number },
-  weight: { type: Number },
-  tare: { type: Number },
-  contailer: { type: Number },
-  noOfVehicle: { type: Number },
-  status: {
-    type: String,
-    enum: ['Open', 'Close'],
-    default: 'Open'
-  },
-  approvedComment: { type: String },
-  remark: { type: String }
-});
-
-
-// Define schema for the job order
 const jobOrderSchema = new Schema({
   jobOrder_no: { type: String, required: true },
   indentNo: { type: String, required: true }, // Use indentNo for reference
@@ -60,16 +12,18 @@ const jobOrderSchema = new Schema({
   orderDate: { type: Date },
   orderMode: { type: String },
   serviceMode: { type: String },
-  rfq: { type: Number },
-  orderType: { type: String },
   expectedDate: { type: Date },
   employee: { type: String },
-  source: { type: String },
-  destination: { type: String },
+  from: { type: String, required: true },
+  to: { type: String, required: true },
   consignor: { type: String },
   consignee: { type: String },
-  additem: [itemSchema], // Array of items
-  total: totalSchema 
+
+  // Additional fields to be auto-filled from the matching item in Indent
+  weight: { type: Number },
+  quantumrate: { type: Number },
+  effectiverate: { type: Number },
+  cost: { type: Number }
 });
 
 // Middleware to auto-fill fields from Indent
@@ -89,14 +43,29 @@ jobOrderSchema.pre('save', async function (next) {
       this.orderDate = indent.orderDate;
       this.orderMode = indent.orderMode;
       this.serviceMode = indent.serviceMode;
-      this.rfq = indent.rfq;
-      this.orderType = indent.orderType;
       this.expectedDate = indent.expectedDate;
       this.employee = indent.employee;
-      this.source = indent.source;
-      this.destination = indent.destination;
-      this.consignor = indent.other.consignor; // Add consignor
-      this.consignee = indent.other.consignee; // Add consignee
+      this.consignor = indent.other.consignor;
+      this.consignee = indent.other.consignee;
+
+      // Validate 'to' field based on 'from' field
+      const validDestinations = await Indent.getValidDestinations(this.from);
+      if (!validDestinations.includes(this.to)) {
+        return next(new Error(`Invalid destination. Valid destinations for ${this.from} are: ${validDestinations.join(', ')}`));
+      }
+
+      // Find the matching item in the indent based on 'from' and 'to'
+      const matchedItem = indent.additem.find(item => item.from === this.from && item.to === this.to);
+
+      if (!matchedItem) {
+        return next(new Error('Invalid route. Please select a valid "from" and "to" combination.'));
+      }
+
+      // Auto-fill the additional fields from the matching item
+      this.weight = matchedItem.WEIGHT;
+      this.quantumrate = matchedItem.QUANTUMRATE;
+      this.effectiverate = matchedItem.EFFECTIVERATE;
+      this.cost = matchedItem.COST;
 
       next();
     } catch (error) {
@@ -107,28 +76,422 @@ jobOrderSchema.pre('save', async function (next) {
   }
 });
 
+// Middleware to update indent totals after job order is created
+jobOrderSchema.post('save', async function (doc, next) {
+  try {
+    // Find the indent
+    const indent = await Indent.findOne({ indentNo: doc.indentNo });
 
-// Middleware to calculate total values
-jobOrderSchema.pre('save', function (next) {
-  const total = this.additem.reduce((acc, curr) => {
-    acc.pkgs += curr.PKGS || 0;
-    acc.weight += curr.WEIGHT || 0;
-    acc.tare += curr.TARE || 0;
-    acc.container += curr.CONTAINER || 0;
-    acc.noOfVehicle += curr.NO_OF_VEHICLE || 0;
-    return acc;
-  }, { pkgs: 0, weight: 0, tare: 0, container: 0,  noOfVehicle: 0 });
+    if (!indent) {
+      return next(new Error('Indent not found'));
+    }
 
-  this.total = {
-    ...total,
-    status: 'Open', 
-    approvedComment: '',
-    remark: ''
-  };
-  next();
+    // Find the matching item in the indent based on 'from' and 'to'
+    const matchedItem = indent.additem.find(item => item.from === doc.from && item.to === doc.to);
+
+    if (!matchedItem) {
+      return next(new Error('Invalid route. Please select a valid "from" and "to" combination.'));
+    }
+
+    // Subtract the job order values from the indent total
+    indent.total.weight -= doc.weight;
+    indent.total.quantumrate -= doc.quantumrate;
+    indent.total.effectiverate -= doc.effectiverate;
+    indent.total.cost -= doc.cost;
+
+    // Update the indent status if all values are zero
+    if ( indent.total.weight <= 0 && indent.total.quantumrate <= 0 && indent.total.cost <= 0 && indent.total.effectiverate <= 0) {
+      indent.total.status = 'Close';
+    }
+
+    await indent.save();
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = mongoose.model('JobOrder', jobOrderSchema);
+
+
+
+// const mongoose = require('mongoose');
+// const Schema = mongoose.Schema;
+// const Indent = require('./Indent'); // Ensure the path to your Indent model is correct
+
+// // Define schema for the job order
+// const jobOrderSchema = new Schema({
+//   jobOrder_no: { type: String, required: true },
+//   indentNo: { type: String, required: true }, // Use indentNo for reference
+//   // Fields to be auto-filled from Indent
+//   customer: { type: String },
+//   orderNo: { type: String },
+//   orderDate: { type: Date },
+//   orderMode: { type: String },
+//   serviceMode: { type: String },
+//   expectedDate: { type: Date },
+//   employee: { type: String },
+//   from: { type: String, required: true },
+//   to: { type: String, required: true },
+//   consignor: { type: String },
+//   consignee: { type: String },
+
+//   // Additional fields to be auto-filled from the matching item in Indent
+//   weight: { type: Number },
+//   quantumrate: { type: Number },
+//   effectiverate: { type: Number },
+//   cost: { type: Number }
+// });
+
+// // Middleware to auto-fill fields from Indent
+// jobOrderSchema.pre('save', async function (next) {
+//   if (this.isNew) { // Only run this middleware when the document is new
+//     try {
+//       // Find the indent using indentNo
+//       const indent = await Indent.findOne({ indentNo: this.indentNo });
+
+//       if (!indent) {
+//         return next(new Error('Indent not found'));
+//       }
+
+//       // Auto-fill fields from Indent
+//       this.customer = indent.customer;
+//       this.orderNo = indent.orderNo;
+//       this.orderDate = indent.orderDate;
+//       this.orderMode = indent.orderMode;
+//       this.serviceMode = indent.serviceMode;
+//       this.expectedDate = indent.expectedDate;
+//       this.employee = indent.employee;
+//       this.consignor = indent.other.consignor;
+//       this.consignee = indent.other.consignee;
+
+
+      
+//       // Validate 'to' field based on 'from' field
+//       const validDestinations = await Indent.getValidDestinations(this.from);
+//       if (!validDestinations.includes(this.to)) {
+//         return next(new Error(`Invalid destination. Valid destinations for ${this.from} are: ${validDestinations.join(', ')}`));
+//       }
+
+//       // Find the matching item in the indent based on 'from' and 'to'
+//       const matchedItem = indent.additem.find(item => item.from === this.from && item.to === this.to);
+
+//       if (!matchedItem) {
+//         return next(new Error('Invalid route. Please select a valid "from" and "to" combination.'));
+//       }
+
+//       // Auto-fill the additional fields from the matching item
+//       this.weight = matchedItem.WEIGHT;
+//       this.quantumrate = matchedItem.QUANTUMRATE;
+//       this.effectiverate = matchedItem.EFFECTIVERATE;
+//       this.cost = matchedItem.COST;
+
+//       next();
+//     } catch (error) {
+//       next(error);
+//     }
+//   } else {
+//     next();
+//   }
+// });
+
+// // Middleware to update indent totals after job order is created
+// jobOrderSchema.post('save', async function (doc, next) {
+//   try {
+//     // Find the indent
+//     const indent = await Indent.findOne({ indentNo: doc.indentNo });
+
+//     if (!indent) {
+//       return next(new Error('Indent not found'));
+//     }
+
+//     // Find the matching item in the indent based on 'from' and 'to'
+//     const matchedItem = indent.additem.find(item => item.from === doc.from && item.to === doc.to);
+
+//     if (!matchedItem) {
+//       return next(new Error('Invalid route. Please select a valid "from" and "to" combination.'));
+//     }
+
+//     // Subtract the job order values from the indent total
+//     indent.total.weight -= doc.weight;
+//     indent.total.quantumrate -= doc.quantumrate;
+//     indent.total.effectiverate -= doc.effectiverate;
+//     indent.total.cost -= doc.cost;
+
+//     // Update the indent status if all values are zero
+//     if ( indent.total.weight <= 0 && indent.total.quantumrate <= 0 && indent.total.cost <= 0 && indent.total.effectiverate <= 0) {
+//       indent.total.status = 'Close';
+//     }
+
+//     await indent.save();
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+// module.exports = mongoose.model('JobOrder', jobOrderSchema);
+
+
+
+// const mongoose = require('mongoose');
+// const Schema = mongoose.Schema;
+// const Indent = require('./Indent'); // Ensure the path to your Indent model is correct
+
+// // Define schema for the job order
+// const jobOrderSchema = new Schema({
+//   jobOrder_no: { type: String, required: true },
+//   indentNo: { type: String, required: true }, // Use indentNo for reference
+//   // Fields to be auto-filled from Indent
+//   customer: { type: String },
+//   orderNo: { type: String },
+//   orderDate: { type: Date },
+//   orderMode: { type: String },
+//   serviceMode: { type: String },
+//   expectedDate: { type: Date },
+//   employee: { type: String },
+//   from: { type: String, required: true },
+//   to: { type: String, required: true },
+//   consignor: { type: String },
+//   consignee: { type: String },
+//   // Additional fields to be auto-filled from the matching item in Indent
+//   dimensions: { type: Number },
+//   weight: { type: Number },
+//   quantum: { type: Number },
+//   rate: { type: Number },
+//   effectiverate: { type: Number }
+// });
+
+// // Middleware to auto-fill fields from Indent
+// jobOrderSchema.pre('save', async function (next) {
+//   if (this.isNew) { // Only run this middleware when the document is new
+//     try {
+//       // Find the indent using indentNo
+//       const indent = await Indent.findOne({ indentNo: this.indentNo });
+
+//       if (!indent) {
+//         return next(new Error('Indent not found'));
+//       }
+
+//       // Auto-fill fields from Indent
+//       this.customer = indent.customer;
+//       this.orderNo = indent.orderNo;
+//       this.orderDate = indent.orderDate;
+//       this.orderMode = indent.orderMode;
+//       this.serviceMode = indent.serviceMode;
+//       this.expectedDate = indent.expectedDate;
+//       this.employee = indent.employee;
+//       this.consignor = indent.other.consignor;
+//       this.consignee = indent.other.consignee;
+
+//       // Find the matching item in the indent based on 'from' and 'to'
+//       const matchedItem = indent.additem.find(item => item.from === this.from && item.to === this.to);
+
+//       if (!matchedItem) {
+//         return next(new Error('Invalid route. Please select a valid "from" and "to" combination.'));
+//       }
+
+//       // Auto-fill the additional fields from the matching item
+//       this.dimensions = matchedItem.DIMENSIONS;
+//       this.weight = matchedItem.WEIGHT;
+//       this.quantum = matchedItem.QUANTUM;
+//       this.rate = matchedItem.RATE;
+//       this.effectiverate = matchedItem.EFFECTIVERATE;
+
+//       next();
+//     } catch (error) {
+//       next(error);
+//     }
+//   } else {
+//     next();
+//   }
+// });
+
+// module.exports = mongoose.model('JobOrder', jobOrderSchema);
+
+
+
+// const mongoose = require('mongoose');
+// const Schema = mongoose.Schema;
+// const Indent = require('./Indent'); // Ensure the path to your Indent model is correct
+
+// // Define schema for the job order
+// const jobOrderSchema = new Schema({
+//   jobOrder_no: { type: String, required: true },
+//   indentNo: { type: String, required: true }, // Use indentNo for reference
+//   // Fields to be auto-filled from Indent
+//   customer: { type: String },
+//   orderNo: { type: String },
+//   orderDate: { type: Date },
+//   orderMode: { type: String },
+//   serviceMode: { type: String },
+//   expectedDate: { type: Date },
+//   employee: { type: String },
+//   from: { type: String, required: true },
+//   to: { type: String, required: true },
+//   consignor: { type: String },
+//   consignee: { type: String },
+// });
+
+// // Middleware to auto-fill fields from Indent
+// jobOrderSchema.pre('save', async function (next) {
+//   if (this.isNew) { // Only run this middleware when the document is new
+//     try {
+//       // Find the indent using indentNo
+//       const indent = await Indent.findOne({ indentNo: this.indentNo });
+
+//       if (!indent) {
+//         return next(new Error('Indent not found'));
+//       }
+
+//       // Auto-fill fields from Indent
+//       this.customer = indent.customer;
+//       this.orderNo = indent.orderNo;
+//       this.orderDate = indent.orderDate;
+//       this.orderMode = indent.orderMode;
+//       this.serviceMode = indent.serviceMode;
+//       this.expectedDate = indent.expectedDate;
+//       this.employee = indent.employee;
+//       this.consignor = indent.other.consignor;
+//       this.consignee = indent.other.consignee;
+
+//       // Validate that the provided 'from' and 'to' match one of the routes in the indent
+//       const isValidRoute = indent.additem.some(item => item.from === this.from && item.to === this.to);
+
+//       if (!isValidRoute) {
+//         return next(new Error('Invalid route. Please select a valid "from" and "to" combination.'));
+//       }
+
+//       next();
+//     } catch (error) {
+//       next(error);
+//     }
+//   } else {
+//     next();
+//   }
+// });
+
+// module.exports = mongoose.model('JobOrder', jobOrderSchema);
+
+
+// const mongoose = require('mongoose');
+// const Schema = mongoose.Schema;
+// const Indent = require('./Indent'); // Ensure the path to your Indent model is correct
+
+// // Define schema for the job order
+// const jobOrderSchema = new Schema({
+//   jobOrder_no: { type: String, required: true },
+//   indentNo: { type: String, required: true }, // Use indentNo for reference
+//   // Fields to be auto-filled from Indent
+//   customer: { type: String },
+//   orderNo: { type: String },
+//   orderDate: { type: Date },
+//   orderMode: { type: String },
+//   serviceMode: { type: String },
+//   expectedDate: { type: Date },
+//   employee: { type: String },
+//   from: { type: String },
+//   to: { type: String },
+//   consignor: { type: String },
+//   consignee: { type: String },
+// });
+
+// // Middleware to auto-fill fields from Indent
+// jobOrderSchema.pre('save', async function (next) {
+//   if (this.isNew) { // Only run this middleware when the document is new
+//     try {
+//       // Find the indent using indentNo
+//       const indent = await Indent.findOne({ indentNo: this.indentNo });
+
+//       if (!indent) {
+//         return next(new Error('Indent not found'));
+//       }
+
+//       // Auto-fill fields from Indent
+//       this.customer = indent.customer;
+//       this.orderNo = indent.orderNo;
+//       this.orderDate = indent.orderDate;
+//       this.orderMode = indent.orderMode;
+//       this.serviceMode = indent.serviceMode;
+//       this.expectedDate = indent.expectedDate;
+//       this.employee = indent.employee;
+//       this.consignor = indent.other.consignor; // Add consignor
+//       this.consignee = indent.other.consignee; // Add consignee
+
+
+//       next();
+//     } catch (error) {
+//       next(error);
+//     }
+//   } else {
+//     next();
+//   }
+// });
+
+// module.exports = mongoose.model('JobOrder', jobOrderSchema);
+
+
+// const mongoose = require('mongoose');
+// const Schema = mongoose.Schema;
+// const Indent = require('./Indent'); // Ensure the path to your Indent model is correct
+
+
+// // Define schema for the job order
+// const jobOrderSchema = new Schema({
+//   jobOrder_no: { type: String, required: true },
+//   indentNo: { type: String, required: true }, // Use indentNo for reference
+//   // Fields to be auto-filled from Indent
+//   customer: { type: String },
+//   orderNo: { type: String },
+//   orderDate: { type: Date },
+//   orderMode: { type: String },
+//   serviceMode: { type: String },
+//   expectedDate: { type: Date },
+//   employee: { type: String },
+//   source: { type: String },
+//   destination: { type: String },
+//   consignor: { type: String },
+//   consignee: { type: String },
+
+
+// });
+
+// // Middleware to auto-fill fields from Indent
+// jobOrderSchema.pre('save', async function (next) {
+//   if (this.isNew) { // Only run this middleware when the document is new
+//     try {
+//       // Find the indent using indentNo
+//       const indent = await Indent.findOne({ indentNo: this.indentNo });
+
+//       if (!indent) {
+//         return next(new Error('Indent not found'));
+//       }
+
+//       // Auto-fill fields from Indent
+//       this.customer = indent.customer;
+//       this.orderNo = indent.orderNo;
+//       this.orderDate = indent.orderDate;
+//       this.orderMode = indent.orderMode;
+//       this.serviceMode = indent.serviceMode;
+//       this.expectedDate = indent.expectedDate;
+//       this.employee = indent.employee;
+//       this.source = indent.source;
+//       this.destination = indent.destination;
+//       this.consignor = indent.other.consignor; // Add consignor
+//       this.consignee = indent.other.consignee; // Add consignee
+
+//       next();
+//     } catch (error) {
+//       next(error);
+//     }
+//   } else {
+//     next();
+//   }
+// });
+
+
+
+// module.exports = mongoose.model('JobOrder', jobOrderSchema);
 
 
 

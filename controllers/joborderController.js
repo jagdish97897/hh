@@ -1,14 +1,12 @@
-// controllers/jobOrderController.js
-
 const JobOrder = require('../models/JobOrder');
 const Indent = require('../models/Indent');
 
 const createJobOrder = async (req, res) => {
-  const { jobOrder_no, indentNo, additem } = req.body;
+  const { jobOrder_no, indentNo, from, to } = req.body;
 
   try {
     // Simple validation
-    if (!jobOrder_no || !indentNo || !additem) {
+    if (!jobOrder_no || !indentNo || !from || !to) {
       return res.status(400).json({ errorMessage: 'Please provide all required fields' });
     }
 
@@ -19,8 +17,14 @@ const createJobOrder = async (req, res) => {
       return res.status(404).json({ errorMessage: 'Indent not found' });
     }
 
+    // Validate that the provided 'from' and 'to' match one of the routes in the indent
+    const isValidRoute = indent.additem.some(item => item.from === from && item.to === to);
+    if (!isValidRoute) {
+      return res.status(400).json({ errorMessage: 'Invalid route. Please select a valid "from" and "to" combination.' });
+    }
+
     // Create a new job order
-    const newJobOrder = new JobOrder({ jobOrder_no, indentNo, additem });
+    const newJobOrder = new JobOrder({ jobOrder_no, indentNo, from, to });
     const savedJobOrder = await newJobOrder.save();
 
     res.status(201).json(savedJobOrder);
@@ -30,7 +34,26 @@ const createJobOrder = async (req, res) => {
   }
 };
 
-module.exports = { createJobOrder };
+const getJobOrderByNumber = async (req, res) => {
+  const { jobOrder_no } = req.params;
+
+  try {
+    // Find job order by jobOrder_no
+    const jobOrder = await JobOrder.findOne({ jobOrder_no });
+
+    if (!jobOrder) {
+      return res.status(404).json({ errorMessage: 'Job Order not found' });
+    }
+
+    res.status(200).json(jobOrder);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMessage: 'Server Error' });
+  }
+};
+
+
+module.exports = { createJobOrder, getJobOrderByNumber };
 
 
 // // controllers/jobOrderController.js

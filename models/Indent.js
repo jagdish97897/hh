@@ -1,43 +1,46 @@
+
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const Parties = require('./Parties');
 
-// Item Schema
 const itemSchema = new Schema({
-  loadtype: {
+  from: { type: String },
+  to: { type: String },
+  vehicletype: {
     type: String,
-    enum: [
-      'FTCLOSE BODY', 'FT CONTAINER', 'FT DALA BODY', 'FT LPT', 'FT CONTAINER',
-      'FT CONTAINER', 'FT CONTAINER MXL', 'FT CONTAINER SXL', 'FT TROLLA',
-      'FT CONTAINER', 'PRIME MOVER', 'FT TRAILER XXXL', 'BY HAND PICKUP',
-      'CANTER', 'CLOSE TRURAS', 'CLOSED BODY TRUCK', 'FTL', 'HIGH BED TRAILER',
-      'JCB'
-    ],
+    enum: ['TRUCK', 'TROLLEY', 'BUS', 'CAR', 'TWO WHEELER', 'CONTAINER', 'TANKER', 'OTHER'],
     required: true
   },
-  PKGS: { type: Number },
+  DIMENSIONS: { type: String },
   WEIGHT: { type: Number },
-  RATE_CALCULATE_ON: {
-    type: String,
-    enum: ['FIXED', 'PKGS', 'WEIGHT'],
-    required: true
-  },
-  RATE: { type: Number },
-  FREIGHT: { type: Number },
-  NO_OF_VEHICLE: { type: Number },
-  ADVANCE: { type: Number },
-  BALANCE: { type: Number },
+  QUANTUMRATE: { type: Number },
+  EFFECTIVERATE: { type: Number },
+  COST: { type: Number },
   REMARKS: { type: String }
 });
 
+// Define pre-save hook to automatically calculate cost
+itemSchema.pre('save', function(next) {
+  if (this.WEIGHT !== undefined && this.QUANTUMRATE !== undefined && this.EFFECTIVERATE !== undefined) {
+    if (this.EFFECTIVERATE !== 0) {
+      this.COST = this.EFFECTIVERATE * this.WEIGHT;
+    } else if (this.QUANTUMRATE !== 0) {
+      this.COST = this.QUANTUMRATE * this.WEIGHT;
+    } else {
+      // If neither QUANTUMRATE nor EFFECTIVERATE is provided, set cost to 0
+      this.COST = 0;
+    }
+  }
+  next();
+});
+
+
 // Total Schema
 const totalSchema = new Schema({
-  pkgs: { type: Number },
   weight: { type: Number },
-  freight: { type: Number },
-  advance: { type: Number },
-  balance: { type: Number },
-  noOfVehicle: { type: Number },
+  quantumrate: { type: Number },
+  cost: { type: Number },
+  effectiverate: { type: Number },
   status: {
     type: String,
     enum: ['Open', 'Close'],
@@ -52,27 +55,23 @@ const indentSchema = new Schema({
   indentNo: { type: String, required: true },
   date: { type: Date, default: Date.now, required: true },
   customer: { type: String, required: true },
-  balance: { type: Number, default: 0 },
   orderNo: { type: String, required: true },
   orderDate: { type: Date, required: true },
   orderMode: { type: String, required: true },
   serviceMode: { type: String, required: true },
-  rfq: { type: Number, required: true },
-  orderType: { type: String, required: true },
+  rfq: { type: String, required: true },
   expectedDate: { type: Date, required: true },
   employee: { type: String, required: true },
-  source: { type: String, required: true },
-  destination: { type: String, required: true },
   other: {
-    consignor: { type: String, required: true },
-    consignee: { type: String, required: true },
+    consignor: { type: String },
+    consignee: { type: String },
     remark: { type: String }
   },
   additem: [itemSchema], // Array of items
   total: totalSchema // Embedded total schema
 });
 
-// Middleware to verify customer consignor and consignee exist in the Parties collection
+// Middleware to verify customer, consignor and consignee exist in the Parties collection
 indentSchema.pre('save', async function (next) {
   try {
     const customer1 = await Parties.findOne({ name: this.customer, type: 'Customer1' });
@@ -80,14 +79,18 @@ indentSchema.pre('save', async function (next) {
       return next(new Error('Customer1 not found in collection'));
     }
 
-    const consignor = await Parties.findOne({ name: this.other.consignor, type: 'Customer2' });
-    if (!consignor) {
-      return next(new Error('Consignor not found in collection'));
+    if (this.other.consignor) {
+      const consignor = await Parties.findOne({ name: this.other.consignor, type: 'Customer2' });
+      if (!consignor) {
+        return next(new Error('Consignor not found in collection'));
+      }
     }
 
-    const consignee = await Parties.findOne({ name: this.other.consignee, type: 'Customer2' });
-    if (!consignee) {
-      return next(new Error('Consignee not found in collection'));
+    if (this.other.consignee) {
+      const consignee = await Parties.findOne({ name: this.other.consignee, type: 'Customer2' });
+      if (!consignee) {
+        return next(new Error('Consignee not found in collection'));
+      }
     }
 
     next();
@@ -99,25 +102,253 @@ indentSchema.pre('save', async function (next) {
 // Middleware to calculate total values
 indentSchema.pre('save', function (next) {
   const total = this.additem.reduce((acc, curr) => {
-    acc.pkgs += curr.PKGS || 0;
     acc.weight += curr.WEIGHT || 0;
-    acc.freight += curr.FREIGHT || 0;
-    acc.advance += curr.ADVANCE || 0;
-    acc.balance += curr.BALANCE || 0;
-    acc.noOfVehicle += curr.NO_OF_VEHICLE || 0;
+    acc.quantumrate += curr.QUANTUMRATE || 0;
+    acc.effectiverate += curr.EFFECTIVERATE || 0;
+    acc.cost += curr.COST || 0;
     return acc;
-  }, { pkgs: 0, weight: 0, freight: 0, advance: 0, balance: 0, noOfVehicle: 0 });
+  }, { weight: 0, quantumrate: 0, effectiverate: 0, cost: 0 });
 
   this.total = {
     ...total,
-    status: 'Open', 
+    status: 'Open',
     approvedComment: '',
     remark: ''
   };
   next();
 });
 
+
+// Static method to get valid destinations for a given 'from' location
+indentSchema.statics.getValidDestinations = async function(from) {
+  const indents = await this.find({ "additem.from": from });
+  const destinations = new Set();
+  indents.forEach(indent => {
+    indent.additem.forEach(item => {
+      if (item.from === from) {
+        destinations.add(item.to);
+      }
+    });
+  });
+  return Array.from(destinations);
+};
+
+
 module.exports = mongoose.model('Indent', indentSchema);
+
+
+
+
+
+
+// const mongoose = require('mongoose');
+// const Schema = mongoose.Schema;
+// const Parties = require('./Parties');
+
+// // Item Schema
+// const itemSchema = new Schema({
+//   from: { type: String },
+//   to: { type: String },
+//   vehicletype: {
+//     type: String,
+//     enum: ['TRUCK','TROLLEY', 'BUS', 'CAR', 'TWO WHEELER', 'CONTAINER', 'TANKER', 'OTHER' ],
+//     required: true
+//   },
+//   DIMENSIONS: { type: Number },
+//   WEIGHT: { type: Number },
+//   QUANTUM: { type: Number },
+//   RATE: { type: Number },
+//   EFFECTIVERATE: { type: Number },
+//   REMARKS: { type: String }
+// });
+
+// // Total Schema
+// const totalSchema = new Schema({
+//   dimensions: { type: Number },
+//   weight: { type: Number },
+//   quantum: { type: Number },
+//   rate: { type: Number },
+//   effectiverate: { type: Number },
+//   status: {
+//     type: String,
+//     enum: ['Open', 'Close'],
+//     default: 'Open'
+//   },
+//   approvedComment: { type: String },
+//   remark: { type: String }
+// });
+
+// // Indent Schema
+// const indentSchema = new Schema({
+//   indentNo: { type: String, required: true },
+//   date: { type: Date, default: Date.now, required: true },
+//   customer: { type: String, required: true },
+//   orderNo: { type: String, required: true },
+//   orderDate: { type: Date, required: true },
+//   orderMode: { type: String, required: true },
+//   serviceMode: { type: String, required: true },
+//   rfq: { type: String, required: true },
+//   expectedDate: { type: Date, required: true },
+//   employee: { type: String, required: true },
+//   other: {
+//     consignor: { type: String, required: true },
+//     consignee: { type: String, required: true },
+//     remark: { type: String }
+//   },
+//   additem: [itemSchema], // Array of items
+//   total: totalSchema // Embedded total schema
+// });
+
+// // Middleware to verify customer consignor and consignee exist in the Parties collection
+// indentSchema.pre('save', async function (next) {
+//   try {
+//     const customer1 = await Parties.findOne({ name: this.customer, type: 'Customer1' });
+//     if (!customer1) {
+//       return next(new Error('Customer1 not found in collection'));
+//     }
+
+//     const consignor = await Parties.findOne({ name: this.other.consignor, type: 'Customer2' });
+//     if (!consignor) {
+//       return next(new Error('Consignor not found in collection'));
+//     }
+
+//     const consignee = await Parties.findOne({ name: this.other.consignee, type: 'Customer2' });
+//     if (!consignee) {
+//       return next(new Error('Consignee not found in collection'));
+//     }
+
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+// // Middleware to calculate total values
+// indentSchema.pre('save', function (next) {
+//   const total = this.additem.reduce((acc, curr) => {
+//     acc.dimensions += curr.DIMENSIONS || 0;
+//     acc.weight += curr.WEIGHT || 0;
+//     acc.quantum += curr.QUANTUM || 0;
+//     acc.rate += curr.RATE || 0;
+//     acc.effectiverate += curr.EFFECTIVERATE || 0;
+//     return acc;
+//   }, { dimensions: 0, weight: 0, quantum: 0, rate: 0, effectiverate: 0 });
+
+//   this.total = {
+//     ...total,
+//     status: 'Open', 
+//     approvedComment: '',
+//     remark: ''
+//   };
+//   next();
+// });
+
+// module.exports = mongoose.model('Indent', indentSchema);
+
+
+// const mongoose = require('mongoose');
+// const Schema = mongoose.Schema;
+// const Parties = require('./Parties');
+
+// // Item Schema
+// const itemSchema = new Schema({
+//   from: { type: String },
+//   to: { type: String },
+//   vehicletype: {
+//     type: String,
+//     enum: ['TRUCK','TROLLEY', 'BUS', 'CAR', 'TWO WHEELER', 'CONTAINER', 'TANKER', 'OTHER' ],
+//     required: true
+//   },
+//   DIMENSIONS: { type: Number },
+//   WEIGHT: { type: Number },
+//   QUANTUM: { type: Number },
+//   RATE: { type: Number },
+//   EFFECTIVERATE: { type: Number },
+//   REMARKS: { type: String }
+// });
+
+// // Total Schema
+// const totalSchema = new Schema({
+//   dimensions: { type: Number },
+//   weight: { type: Number },
+//   quantum: { type: Number },
+//   rate: { type: Number },
+//   effectiverate: { type: Number },
+//   status: {
+//     type: String,
+//     enum: ['Open', 'Close'],
+//     default: 'Open'
+//   },
+//   approvedComment: { type: String },
+//   remark: { type: String }
+// });
+
+// // Indent Schema
+// const indentSchema = new Schema({
+//   indentNo: { type: String, required: true },
+//   date: { type: Date, default: Date.now, required: true },
+//   customer: { type: String, required: true },
+//   orderNo: { type: String, required: true },
+//   orderDate: { type: Date, required: true },
+//   orderMode: { type: String, required: true },
+//   serviceMode: { type: String, required: true },
+//   rfq: { type: String, required: true },
+//   expectedDate: { type: Date, required: true },
+//   employee: { type: String, required: true },
+//   other: {
+//     consignor: { type: String, required: true },
+//     consignee: { type: String, required: true },
+//     remark: { type: String }
+//   },
+//   additem: [itemSchema], // Array of items
+//   total: totalSchema // Embedded total schema
+// });
+
+// // Middleware to verify customer consignor and consignee exist in the Parties collection
+// indentSchema.pre('save', async function (next) {
+//   try {
+//     const customer1 = await Parties.findOne({ name: this.customer, type: 'Customer1' });
+//     if (!customer1) {
+//       return next(new Error('Customer1 not found in collection'));
+//     }
+
+//     const consignor = await Parties.findOne({ name: this.other.consignor, type: 'Customer2' });
+//     if (!consignor) {
+//       return next(new Error('Consignor not found in collection'));
+//     }
+
+//     const consignee = await Parties.findOne({ name: this.other.consignee, type: 'Customer2' });
+//     if (!consignee) {
+//       return next(new Error('Consignee not found in collection'));
+//     }
+
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+// // Middleware to calculate total values
+// indentSchema.pre('save', function (next) {
+//   const total = this.additem.reduce((acc, curr) => {
+//     acc.dimensions += curr.DIMENSIONS || 0;
+//     acc.weight += curr.WEIGHT || 0;
+//     acc.quantum += curr.QUANTUM || 0;
+//     acc.rate += curr.RATE || 0;
+//     acc.effectiverate += curr.EFFECTIVERATE || 0;
+//     return acc;
+//   }, { dimensions: 0, weight: 0, quantum: 0, rate: 0, effectiverate: 0 });
+
+//   this.total = {
+//     ...total,
+//     status: 'Open', 
+//     approvedComment: '',
+//     remark: ''
+//   };
+//   next();
+// });
+
+// module.exports = mongoose.model('Indent', indentSchema);
 
 
 

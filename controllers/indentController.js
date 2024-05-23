@@ -7,17 +7,13 @@ const createIndent = async (req, res) => {
     indentNo,
     date,
     customer,
-    balance,
     orderNo,
     orderDate,
     orderMode,
     serviceMode,
     rfq,
-    orderType,
     expectedDate,
     employee,
-    source,
-    destination,
     other,
     additem
     
@@ -25,7 +21,7 @@ const createIndent = async (req, res) => {
 
   try {
     // Simple validation
-    if (!indentNo || !date || !customer || !orderNo || !orderDate || !orderMode || !serviceMode || !rfq || !orderType || !expectedDate || !employee || !source || !destination || !additem) {
+    if (!indentNo || !date || !customer || !orderNo || !orderDate || !orderMode || !serviceMode || !rfq || !expectedDate || !employee || !additem) {
       return res.status(400).json({ errorMessage: 'Please provide all required fields' });
     }
 
@@ -34,17 +30,13 @@ const createIndent = async (req, res) => {
       indentNo,
       date,
       customer,
-      balance,
       orderNo,
       orderDate,
       orderMode,
       serviceMode,
       rfq,
-      orderType,
       expectedDate,
       employee,
-      source,
-      destination,
       other,
       additem
     });
