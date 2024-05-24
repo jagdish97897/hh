@@ -110,9 +110,7 @@ jobOrderSchema.post('save', async function (doc, next) {
     next(error);
   }
 });
-
 module.exports = mongoose.model('JobOrder', jobOrderSchema);
-
 
 
 // const mongoose = require('mongoose');

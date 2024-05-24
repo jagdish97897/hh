@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {createVehicleRegistration, getAllVehicleRegistrations,getVehicleRegistrationById,updateVehicleRegistration,deleteVehicleRegistration,   createOwner,
+const {createVehicleRegistration, getAllVehicleRegistrations,getVehicleRegistrationById,getVehicleRegistrationByVehicleNo, updateVehicleRegistration,deleteVehicleRegistration,   createOwner,
     getOwners,
     getOwnerById,
     updateOwner,
@@ -20,6 +20,7 @@ router.get('/vehicle-registrations', getAllVehicleRegistrations);
 // Route for fetching a single vehicle registration by ID
 router.get('/vehicle-registrations/:id', getVehicleRegistrationById);
 
+router.get('/getvehicle-registrations/:vehicleNo', getVehicleRegistrationByVehicleNo);
 // Route for updating a vehicle registration by ID
 router.put('/vehicle-registrations/:id', updateVehicleRegistration);
 

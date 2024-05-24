@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 
 const supplyChainPartnerSchema = new mongoose.Schema({
-    type: { type: String, enum: ['Owner', 'Broker'], required: true },
+    type: { type: String, enum: ['Owner', 'Broker','Driver'], required: true },
     name: { type: String, required: true },
     address: { type: String, required: true },
     country: String,
