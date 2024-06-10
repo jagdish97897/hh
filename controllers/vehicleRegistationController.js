@@ -1,5 +1,6 @@
 const VehicleRegistration = require('../models/VehicleRegistation');
-
+require('dotenv').config();
+const axios = require('axios');
 // Controller function to handle vehicle registration creation
 const createVehicleRegistration = async (req, res) => {
     try {
@@ -331,6 +332,39 @@ const deleteBroker = async (req, res) => {
     }
 };
 
+ const getDistance= async(req, res)=>{
+    try {
+        const response = await axios.get(
+            `https://maps.googleapis.com/maps/api/distancematrix/json`,
+            {
+                params: {
+                    origins: req.body.sourcePincode,
+                    destinations: req.body.destinationPincode,
+                    key: 'AIzaSyAI0jFdBsZoRP00RGq050nfe24aSfj1mwo'
+                }
+            }
+        );
+
+        console.log('res : ',response)
+
+        if (!response) {
+            throw new Error('Invalid pincode');
+        }
+
+
+        // Extract distance information
+        const distanceInfo = response?.data?.rows[0]?.elements[0];
+        const distance = distanceInfo?.distance?.text;
+        console.log(distance);
+        return res.status(200).json(distance);
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+
 module.exports = {createVehicleRegistration, getAllVehicleRegistrations, getVehicleRegistrationById,getVehicleRegistrationByVehicleNo, updateVehicleRegistration, deleteVehicleRegistration,  createOwner, 
     getOwners,
     getOwnerById,
@@ -340,7 +374,8 @@ module.exports = {createVehicleRegistration, getAllVehicleRegistrations, getVehi
     getBrokers,
     getBrokerById,
     updateBroker,
-    deleteBroker };
+    deleteBroker,
+    getDistance };
 
 
 // const VehicleRegistration = require('../models/VehicleRegistation');

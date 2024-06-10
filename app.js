@@ -21,6 +21,7 @@ const goodsreceiptRoutes = require('./routes/goodsreceiptRoutes');
 const billcreateRoutes = require('./routes/billcreateRoutes');
 const unloadingRoutes = require('./routes/unloadingRoutes');
 const podRoutes = require('./routes/podRoutes');
+const distanceRoutes = require('./routes/distanceRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -64,6 +65,7 @@ app.use('/', billcreateRoutes);
 app.use('/', podRoutes);
 app.use('/', rateRoutes);
 app.use('/', unloadingRoutes);
+app.use('/', distanceRoutes);
 
 const port = 5000;
 
