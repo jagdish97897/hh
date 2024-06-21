@@ -1,5 +1,6 @@
 const VehicleRegistration = require('../models/VehicleRegistation');
-
+require('dotenv').config();
+const axios = require('axios');
 // Controller function to handle vehicle registration creation
 const createVehicleRegistration = async (req, res) => {
     try {
@@ -60,28 +61,6 @@ const getVehicleRegistrationById = async (req, res) => {
         });
     }
 };
-// const getVehicleRegistrationByVehicleNo = async (req, res) => {
-//     try {
-//         const vehicleRegistration = await VehicleRegistration.findByvehicleNo(req.params.vehicleNo);
-//         if (!vehicleRegistration) {
-//             return res.status(404).json({
-//                 status: 'fail',
-//                 message: 'Vehicle registration not found'
-//             });
-//         }
-//         res.status(200).json({
-//             status: 'success',
-//             data: {
-//                 vehicleRegistration
-//             }
-//         });
-//     } catch (err) {
-//         res.status(500).json({
-//             status: 'error',
-//             message: err.message
-//         });
-//     }
-// };
 
 const getVehicleRegistrationByVehicleNo = async (req, res) => {
     try {
@@ -106,66 +85,6 @@ const getVehicleRegistrationByVehicleNo = async (req, res) => {
     }
 };
 
-
-// const getVehicleRegistrationByVehicleNo = async (req, res) => {
-//     try {
-//         const vehicleRegistration = await VehicleRegistration.findOne({ vehicleNo: req.params.vehicleNo });
-//         if (!vehicleRegistration) {
-//             return res.status(404).json({
-//                 status: 'fail',
-//                 message: 'Vehicle registration not found'
-//             });
-//         }
-//         res.status(200).json({
-//             status: 'success',
-//             data: {
-//                 vehicleRegistration
-//             }
-//         });
-//     } catch (err) {
-//         res.status(500).json({
-//             status: 'error',
-//             message: err.message
-//         });
-//     }
-// };
-
-
-// const getVehicleRegistrationByVehicleNo = async (req, res) => {
-//     const { vehicleNo } = req.params;
-  
-//     try {
-//       // Find job order by jobOrder_no
-//       const vehicleRegistration = await vehicleRegistration.findOne({ vehicleNo });
-  
-//       if (!vehicleRegistration) {
-//         return res.status(404).json({ errorMessage: 'vehicleRegistration not found' });
-//       }
-  
-//       res.status(200).json(vehicleRegistration);
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ errorMessage: 'Server Error' });
-//     }
-//   };
-
-// const getVehicleRegistrationByVehicleNo = async (req, res) => {
-//     const { vehicleNo } = req.params;
-  
-//     try {
-//         // Find vehicle registration by vehicleNo
-//         const vehicleRegistration = await VehicleRegistration.findOne({ vehicleNo });
-  
-//         if (!vehicleRegistration) {
-//             return res.status(404).json({ errorMessage: 'Vehicle registration not found' });
-//         }
-  
-//         res.status(200).json(vehicleRegistration);
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ errorMessage: 'Server Error' });
-//     }
-// };
 
 
 // Controller function to handle updating a vehicle registration by ID
@@ -330,6 +249,7 @@ const deleteBroker = async (req, res) => {
         res.status(500).send(error);
     }
 };
+
 
 module.exports = {createVehicleRegistration, getAllVehicleRegistrations, getVehicleRegistrationById,getVehicleRegistrationByVehicleNo, updateVehicleRegistration, deleteVehicleRegistration,  createOwner, 
     getOwners,

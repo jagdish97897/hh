@@ -9,7 +9,7 @@ const {createVehicleRegistration, getAllVehicleRegistrations,getVehicleRegistrat
     getBrokers,
     getBrokerById,
     updateBroker,
-    deleteBroker} = require('../controllers/vehicleRegistationController');
+    deleteBroker } = require('../controllers/vehicleRegistationController');
 
 // Route for creating a new vehicle registration
 router.post('/vehicle-registrations', createVehicleRegistration);
@@ -41,5 +41,6 @@ router.get('/brokers', getBrokers);
 router.get('/brokers/:id', getBrokerById);
 router.put('/brokers/:id', updateBroker);
 router.delete('/brokers/:id', deleteBroker);
+
 
 module.exports = router;
