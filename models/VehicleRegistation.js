@@ -52,6 +52,7 @@ vehicleRegistrationSchema.pre('save', async function (next) {
         }
 
 
+
         // Set the owner's and broker's phone numbers
         this.ownerPhone = owner.phone;
         this.ownerAddress = owner.address;
