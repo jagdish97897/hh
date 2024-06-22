@@ -3,20 +3,8 @@ const { Schema } = mongoose;
 const Parties = require('./Parties');
 
 const itemSchema = new Schema({
-  from: {
-    type: String,
-    required: true
-  },
-  to: [{
-    destination: {
-      type: String,
-      required: true
-    },
-    distance: {
-      type: String,
-      required: true
-    }
-  }],
+  from: { type: String },
+  to: { type: String },
   vehicletype: {
     type: String,
     enum: ['TRUCK', 'TROLLEY', 'CONTAINER', 'TANKER', 'OTHER'],
@@ -120,7 +108,7 @@ indentSchema.pre('save', function (next) {
 });
 
 // Static method to get valid destinations for a given 'from' location
-indentSchema.statics.getValidDestinations = async function (from) {
+indentSchema.statics.getValidDestinations = async function(from) {
   const indents = await this.find({ "additem.from": from });
   const destinations = new Set();
   indents.forEach(indent => {
