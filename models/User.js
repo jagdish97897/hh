@@ -14,7 +14,7 @@ const UserSchema = new Schema({
   },
   mobile: {
     type: Number,
-    required: false 
+    required: false
   },
   date: {
     type: Date,

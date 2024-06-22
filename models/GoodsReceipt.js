@@ -41,8 +41,8 @@ const goodsReceiptSchema = new mongoose.Schema({
     cod: {
         favouring: { type: String },
         amount: { type: Number, default: 0 },
-        mode: { 
-            type: String, 
+        mode: {
+            type: String,
             enum: ['CHEQUE', 'ATM', 'CASH', 'DD', 'ECS', 'NEFT', 'IMPS', 'RTGS'],
             default: 'CASH'
         },

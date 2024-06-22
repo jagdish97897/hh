@@ -30,14 +30,14 @@ const vehiclePlacementSchema = new mongoose.Schema({
     consignee: { type: String },
     consigneeGSTIN: { type: String },
     consigneeAddress: { type: String },
-    vehicleNo: { type: String},
+    vehicleNo: { type: String },
     broker: { type: String },
     owner: { type: String },
     loadType: { type: String },
     ownerPhone: { type: String },
     ownerAddress: { type: String },
-    brokerPhone: { type: String }, 
-    brokerAddress: { type: String }, 
+    brokerPhone: { type: String },
+    brokerAddress: { type: String },
     brokerdetails: {
         name: { type: String, required: true },
         Address: { type: String, required: true },
@@ -48,7 +48,7 @@ const vehiclePlacementSchema = new mongoose.Schema({
         Mobile: { type: String, required: true },
         Email: { type: String, required: true },
         PAN: String,
-        photo:String,
+        photo: String,
         Remarks: String,
     }
 });

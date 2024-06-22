@@ -23,34 +23,34 @@ const createBranch = async (req, res) => {
 
 
 const getAllBranches = async (req, res) => {
-    try {
-      // Retrieve all branches
-      const branches = await Branch.find();
-      
-      res.json(branches);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ errorMessage: 'Server Error' });
-    }
-  };
+  try {
+    // Retrieve all branches
+    const branches = await Branch.find();
 
-  const getBranchByName = async (req, res) => {
-    const { branchName } = req.params;
-  
-    try {
-      // Retrieve the branch by name
-      const branch = await Branch.findOne({ BranchName: branchName });
-  
-      if (!branch) {
-        return res.status(404).json({ errorMessage: 'Branch not found' });
-      }
-  
-      res.json(branch);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ errorMessage: 'Server Error' });
+    res.json(branches);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMessage: 'Server Error' });
+  }
+};
+
+const getBranchByName = async (req, res) => {
+  const { branchName } = req.params;
+
+  try {
+    // Retrieve the branch by name
+    const branch = await Branch.findOne({ BranchName: branchName });
+
+    if (!branch) {
+      return res.status(404).json({ errorMessage: 'Branch not found' });
     }
-  };
-  
+
+    res.json(branch);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ errorMessage: 'Server Error' });
+  }
+};
+
 
 module.exports = { createBranch, getAllBranches, getBranchByName };

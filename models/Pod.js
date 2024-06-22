@@ -19,7 +19,7 @@ const podSchema = new mongoose.Schema({
     status: { type: String, enum: ['OK', 'DAMAGE', 'EXCESS', 'SHORT'], required: true },
     reportNo: { type: String, required: true },
     reportSubmitDate: { type: Date, required: true },
-    receiver: { 
+    receiver: {
         name: { type: String, required: true },
         relation: { type: String, required: true },
         mobNo: { type: String, required: true },

@@ -123,7 +123,7 @@ const getIndentById = async (req, res) => {
   try {
     // Find the indent by ID
     const indent = await Indent.findById(id);
-    
+
     // Check if the indent exists
     if (!indent) {
       return res.status(404).json({ errorMessage: 'Indent not found' });
@@ -133,7 +133,7 @@ const getIndentById = async (req, res) => {
     res.status(200).json(indent);
   } catch (error) {
     console.error(error);
-    res.status(500).json({errorMessage: 'Server Error' });
+    res.status(500).json({ errorMessage: 'Server Error' });
   }
 };
 
@@ -143,7 +143,7 @@ const getIndentByIndentNo = async (req, res) => {
   try {
     // Find the indent by indentNo
     const indent = await Indent.findOne({ indentNo });
-    
+
     // Check if the indent exists
     if (!indent) {
       return res.status(404).json({ errorMessage: 'Indent not found' });
@@ -159,4 +159,4 @@ const getIndentByIndentNo = async (req, res) => {
 
 
 
-module.exports = { createIndent, getAllIndents, updateIndent, getIndentById, getIndentByIndentNo};
+module.exports = { createIndent, getAllIndents, updateIndent, getIndentById, getIndentByIndentNo };

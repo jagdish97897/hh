@@ -249,28 +249,28 @@ const billCreateSchema = new mongoose.Schema({
     //             gst: { type: String, required: true },
     //             total: { type: String, required: true }
     //         }
-           
+
     //     }
     // },
 
     others: {
-        interstate: { type: String , enum:["true","false"] },
-        reverseCharges: { type: String , enum:["true","false"] },
-        itemCode:  String ,
-        description:  String ,
-        poJobNo:  String ,
-        poJobDate:  Date ,
-        wccSbNo:  String ,
-        wccSbDate:  Date ,
-        siteName:  String ,
-        siteID:  String ,
-        receiptNo:  String ,
-        receiptDate:  Date ,
-        SACCode:  String ,
-        paymentBank:  String 
+        interstate: { type: String, enum: ["true", "false"] },
+        reverseCharges: { type: String, enum: ["true", "false"] },
+        itemCode: String,
+        description: String,
+        poJobNo: String,
+        poJobDate: Date,
+        wccSbNo: String,
+        wccSbDate: Date,
+        siteName: String,
+        siteID: String,
+        receiptNo: String,
+        receiptDate: Date,
+        SACCode: String,
+        paymentBank: String
     },
 
-    remarks: String 
+    remarks: String
 });
 
 module.exports = mongoose.model('BillCreate', billCreateSchema);
