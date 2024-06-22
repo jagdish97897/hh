@@ -33,9 +33,9 @@ const vehicleRegistrationSchema = new Schema({
     currentStatus: String,
     currentStation: String,
     ownerPhone: String, // Field to store owner's phone number
-    ownerAddress:String,
+    ownerAddress: String,
     brokerPhone: String, // Field to store broker's phone number
-    brokerAddress:String
+    brokerAddress: String
 });
 
 // Middleware to verify owner and broker names exist in SupplyChainPartner collection

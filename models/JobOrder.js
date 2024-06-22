@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const Indent = require('./Indent'); // Ensure the path to your Indent model is correct
 const Parties = require('./Parties'); // Ensure the path to your Parties model is correct
-const VehicleRegistration = require('./VehicleRegistation'); 
+const VehicleRegistration = require('./VehicleRegistation');
 
 const jobOrderSchema = new Schema({
   jobOrder_no: { type: String, required: true, unique: true },
@@ -16,7 +16,7 @@ const jobOrderSchema = new Schema({
   indentNo: { type: String, required: true }, // Use indentNo for reference
 
   vehicleNo: { type: String, required: true },
-  
+
   broker: { type: String },
   owner: { type: String },
   loadType: { type: String },
@@ -54,10 +54,10 @@ jobOrderSchema.pre('save', async function (next) {
         return next(new Error('Job order for this indent, from, and to already exists.'));
       }
 
-      
+
       const vehicleRegistration = await VehicleRegistration.findOne({ vehicleNo: this.vehicleNo });
       if (!vehicleRegistration) {
-          return next(new Error('VehicleRegistration not found'));
+        return next(new Error('VehicleRegistration not found'));
       }
 
       // Auto-fill fields from VehicleRegistration

@@ -50,7 +50,7 @@ const indentSchema = new Schema({
   indentNo: { type: String, required: true, unique: false },
   date: { type: Date, default: Date.now, required: true },
   customer: { type: String, required: true },
-  customerGSTIN: { type: String }, 
+  customerGSTIN: { type: String },
   customerAddress: { type: String },
   orderNo: { type: String, required: true },
   orderDate: { type: Date, required: true },

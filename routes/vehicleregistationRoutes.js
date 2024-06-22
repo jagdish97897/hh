@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {createVehicleRegistration, getAllVehicleRegistrations,getVehicleRegistrationById,getVehicleRegistrationByVehicleNo, updateVehicleRegistration,deleteVehicleRegistration,   createOwner,
+const { createVehicleRegistration, getAllVehicleRegistrations, getVehicleRegistrationById, getVehicleRegistrationByVehicleNo, updateVehicleRegistration, deleteVehicleRegistration, createOwner,
     getOwners,
     getOwnerById,
     updateOwner,

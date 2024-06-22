@@ -74,7 +74,7 @@ const deleteVehiclePlacement = async (req, res) => {
 };
 
 
-module.exports = {createVehiclePlacement, getAllVehiclePlacements, getVehiclePlacementById,getVehiclePlacementByNumber, updateVehiclePlacement, deleteVehiclePlacement };
+module.exports = { createVehiclePlacement, getAllVehiclePlacements, getVehiclePlacementById, getVehiclePlacementByNumber, updateVehiclePlacement, deleteVehiclePlacement };
 
 
 

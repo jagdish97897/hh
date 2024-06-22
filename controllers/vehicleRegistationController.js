@@ -251,7 +251,14 @@ const deleteBroker = async (req, res) => {
 };
 
 
-module.exports = {createVehicleRegistration, getAllVehicleRegistrations, getVehicleRegistrationById,getVehicleRegistrationByVehicleNo, updateVehicleRegistration, deleteVehicleRegistration,  createOwner, 
+module.exports = {
+    createVehicleRegistration,
+    getAllVehicleRegistrations,
+    getVehicleRegistrationById,
+    getVehicleRegistrationByVehicleNo,
+    updateVehicleRegistration,
+    deleteVehicleRegistration,
+    createOwner,
     getOwners,
     getOwnerById,
     updateOwner,
@@ -260,6 +267,6 @@ module.exports = {createVehicleRegistration, getAllVehicleRegistrations, getVehi
     getBrokers,
     getBrokerById,
     updateBroker,
-    deleteBroker,
-    getDistance };
+    deleteBroker
+};
 

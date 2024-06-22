@@ -2,7 +2,7 @@ const JobOrder = require('../models/JobOrder');
 const Indent = require('../models/Indent');
 
 const createJobOrder = async (req, res) => {
-  const { jobOrder_no, indentNo, from, to, consignee, consignor, vehicleNo} = req.body;
+  const { jobOrder_no, indentNo, from, to, consignee, consignor, vehicleNo } = req.body;
 
   try {
     // Simple validation
@@ -24,7 +24,7 @@ const createJobOrder = async (req, res) => {
     }
 
     // Create a new job order
-    const newJobOrder = new JobOrder({ jobOrder_no, indentNo, from, to, consignee, consignor,vehicleNo });
+    const newJobOrder = new JobOrder({ jobOrder_no, indentNo, from, to, consignee, consignor, vehicleNo });
     const savedJobOrder = await newJobOrder.save();
 
     res.status(201).json(savedJobOrder);
@@ -121,5 +121,5 @@ const getJobOrderById = async (req, res) => {
 };
 
 
-module.exports = { createJobOrder, getJobOrderByNumber,getAllJobOrders, updateJobOrderById, getJobOrderById };
+module.exports = { createJobOrder, getJobOrderByNumber, getAllJobOrders, updateJobOrderById, getJobOrderById };
 
