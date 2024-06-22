@@ -260,6 +260,5 @@ module.exports = {createVehicleRegistration, getAllVehicleRegistrations, getVehi
     getBrokers,
     getBrokerById,
     updateBroker,
-    deleteBroker,
-    getDistance };
+    deleteBroker };
 
