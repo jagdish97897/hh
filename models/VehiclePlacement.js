@@ -1,20 +1,23 @@
 const mongoose = require('mongoose');
 const JobOrder = require('./JobOrder'); // Import the JobOrder model
-const VehicleRegistration = require('./VehicleRegistation'); // Import the VehicleRegistration model
+
 
 // Define schema for VehiclePlacement
 const vehiclePlacementSchema = new mongoose.Schema({
     vehicle_placement_no: { type: String, required: true },
     date: { type: Date, required: true },
+    paymentto: { type: String, enum: ['BROKER', 'OWNER'] },
     jobOrder_no: { type: String, required: true },
-    vehicleNo: { type: String, required: true },
 
-    broker: { type: String },
-    owner: { type: String },
     // Fields to be auto-filled from JobOrder
     customer: { type: String },
+    dimensions: { type: String },
     from: { type: String },
     to: { type: String },
+    weight: { type: String },
+    quantumrate: { type: String },
+    effectiverate: { type: String },
+    cost: { type: String },
     orderNo: { type: String },
     orderDate: { type: Date },
     orderMode: { type: String },
@@ -22,7 +25,32 @@ const vehiclePlacementSchema = new mongoose.Schema({
     expectedDate: { type: Date },
     employee: { type: String },
     consignor: { type: String },
+    consignorGSTIN: { type: String },
+    consignorAddress: { type: String },
     consignee: { type: String },
+    consigneeGSTIN: { type: String },
+    consigneeAddress: { type: String },
+    vehicleNo: { type: String},
+    broker: { type: String },
+    owner: { type: String },
+    loadType: { type: String },
+    ownerPhone: { type: String },
+    ownerAddress: { type: String },
+    brokerPhone: { type: String }, 
+    brokerAddress: { type: String }, 
+    brokerdetails: {
+        name: { type: String, required: true },
+        Address: { type: String, required: true },
+        City: { type: String, required: true },
+        PIN: { type: String, required: true },
+        State: { type: String, required: true },
+        Country: { type: String, required: true },
+        Mobile: { type: String, required: true },
+        Email: { type: String, required: true },
+        PAN: String,
+        photo:String,
+        Remarks: String,
+    }
 });
 
 // Middleware to auto-fill fields from JobOrder and VehicleRegistration
@@ -34,10 +62,6 @@ vehiclePlacementSchema.pre('save', async function (next) {
                 return next(new Error('JobOrder not found'));
             }
 
-            const vehicleRegistration = await VehicleRegistration.findOne({ vehicleNo: this.vehicleNo });
-            if (!vehicleRegistration) {
-                return next(new Error('VehicleRegistration not found'));
-            }
 
             // Auto-fill fields from JobOrder
             this.customer = jobOrder.customer;
@@ -50,11 +74,19 @@ vehiclePlacementSchema.pre('save', async function (next) {
             this.expectedDate = jobOrder.expectedDate;
             this.employee = jobOrder.employee;
             this.consignor = jobOrder.consignor;
+            this.consignorGSTIN = jobOrder.consignorGSTIN;
+            this.consignorAddress = jobOrder.consignorAddress;
             this.consignee = jobOrder.consignee;
-
-            // Auto-fill fields from VehicleRegistration
-            this.broker = vehicleRegistration.broker;
-            this.owner = vehicleRegistration.owner;
+            this.consigneeGSTIN = jobOrder.consigneeGSTIN;
+            this.consigneeAddress = jobOrder.consigneeAddress;
+            this.vehicleNo = jobOrder.vehicleNo;
+            this.broker = jobOrder.broker;
+            this.owner = jobOrder.owner;
+            this.loadType = jobOrder.loadType;
+            this.ownerPhone = jobOrder.ownerPhone;
+            this.ownerAddress = jobOrder.ownerAddress;
+            this.brokerPhone = jobOrder.brokerPhone;
+            this.brokerAddress = jobOrder.brokerAddress;
 
             next();
         } catch (error) {

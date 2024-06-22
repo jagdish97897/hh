@@ -21,7 +21,8 @@ const allpartiesRegistration = async (req, res) => {
             tds,
             itr,
             generalDetails,
-            bankDetails
+            bankDetails,
+            notifier
            
          
         } = req.body;
@@ -90,7 +91,8 @@ const allpartiesRegistration = async (req, res) => {
             tds,
             itr,
             generalDetails,
-            bankDetails
+            bankDetails,
+            notifier
            
           
         });
@@ -102,6 +104,60 @@ const allpartiesRegistration = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+const getNotifierNames = async (req, res) => {
+    try {
+        // Find all documents in the collection
+        const parties = await partiesRegistration.find({}, 'notifier');
+
+        // Extract all notifier names
+        const notifierNames = parties.reduce((acc, party) => {
+            if (party.notifier && party.notifier.length) {
+                party.notifier.forEach(notifier => {
+                    acc.push(notifier.name);
+                });
+            }
+            return acc;
+        }, []);
+
+        // Send the response
+        res.status(200).json({ notifierNames });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'An error occurred while fetching notifier names' });
+    }
+};
+
+
+
+
+// Method to retrieve employeenames by party name
+const getEmployeeNamesByPartyName = async (req, res) => {
+    try {
+        const { name } = req.params;
+        
+        // Find the party by name
+        const party = await partiesRegistration.findOne({ name });
+
+        if (!party) {
+            return res.status(404).json({ message: 'Party not found' });
+        }
+
+        // Extract employeenames from notifier array and filter out null/undefined values
+        const employeeNames = party.notifier
+            .map(notifier => notifier.employeename)
+            .filter(name => name !== null && name !== undefined);
+
+        res.status(200).json({
+            employees: employeeNames
+        });
+    } catch (error) {
+        console.error('Error retrieving employee names:', error.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+
 
 // Controller for retrieving customers of type Customer1
 const getCustomer1 = async (req, res) => {
@@ -125,7 +181,7 @@ const getCustomer1 = async (req, res) => {
 
 
 module.exports = {
-    allpartiesRegistration, getCustomer1, getCustomer2
+    allpartiesRegistration, getCustomer1, getCustomer2,getNotifierNames, getEmployeeNamesByPartyName
 };
 
 
