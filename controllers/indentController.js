@@ -16,7 +16,6 @@ const createIndent = async (req, res) => {
     employee,
     other,
     additem
-    
   } = req.body;
 
   try {
@@ -40,6 +39,7 @@ const createIndent = async (req, res) => {
       other,
       additem
     });
+
     const savedIndent = await newIndent.save();
 
     res.status(201).json(savedIndent);
@@ -48,6 +48,8 @@ const createIndent = async (req, res) => {
     res.status(500).json({ errorMessage: 'Server Error' });
   }
 };
+
+
 const getAllIndents = async (req, res) => {
   try {
     // Fetch all indents from the database
@@ -131,7 +133,7 @@ const getIndentById = async (req, res) => {
     res.status(200).json(indent);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ errorMessage: 'Server Error' });
+    res.status(500).json({errorMessage: 'Server Error' });
   }
 };
 
@@ -154,4 +156,7 @@ const getIndentByIndentNo = async (req, res) => {
     res.status(500).json({ errorMessage: 'Server Error' });
   }
 };
+
+
+
 module.exports = { createIndent, getAllIndents, updateIndent, getIndentById, getIndentByIndentNo};

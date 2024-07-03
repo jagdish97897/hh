@@ -34,6 +34,18 @@ const getVehiclePlacementById = async (req, res) => {
     }
 };
 
+const getVehiclePlacementByNumber = async (req, res) => {
+    try {
+        const vehiclePlacement = await VehiclePlacement.findOne({ vehicle_placement_no: req.params.vehicle_placement_no });
+        if (!vehiclePlacement) {
+            return res.status(404).send({ message: "Vehicle placement not found" });
+        }
+        res.send(vehiclePlacement);
+    } catch (error) {
+        res.status(500).send({ message: "An error occurred while fetching the vehicle placement", error });
+    }
+};
+
 // Update a vehicle placement by ID
 const updateVehiclePlacement = async (req, res) => {
     try {
@@ -61,7 +73,7 @@ const deleteVehiclePlacement = async (req, res) => {
 };
 
 
-module.exports = {createVehiclePlacement, getAllVehiclePlacements, getVehiclePlacementById, updateVehiclePlacement, deleteVehiclePlacement };
+module.exports = {createVehiclePlacement, getAllVehiclePlacements, getVehiclePlacementById,getVehiclePlacementByNumber, updateVehiclePlacement, deleteVehiclePlacement };
 
 
 

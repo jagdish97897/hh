@@ -11,6 +11,8 @@ router.get('/pods', podController.getAllPods);
 // Get a POD entry by ID
 router.get('/pods/:id', podController.getPodById);
 
+router.get('/pods/podno/:podNo', podController.getPodByPodNo);
+
 // Update a POD entry by ID
 router.put('/pods/:id', podController.updatePod);
 

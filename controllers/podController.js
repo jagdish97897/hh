@@ -34,6 +34,18 @@ const getPodById = async (req, res) => {
     }
 };
 
+const getPodByPodNo = async (req, res) => {
+    try {
+        const pod = await Pod.findOne({ podNo: req.params.podNo });
+        if (!pod) {
+            return res.status(404).json({ message: 'POD not found' });
+        }
+        res.json(pod);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // Update a POD entry by ID
 const updatePod = async (req, res) => {
     try {
@@ -65,5 +77,6 @@ module.exports = {
     getAllPods,
     getPodById,
     updatePod,
-    deletePod
+    deletePod,
+    getPodByPodNo
 };

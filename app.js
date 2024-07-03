@@ -21,6 +21,7 @@ const goodsreceiptRoutes = require('./routes/goodsreceiptRoutes');
 const billcreateRoutes = require('./routes/billcreateRoutes');
 const unloadingRoutes = require('./routes/unloadingRoutes');
 const podRoutes = require('./routes/podRoutes');
+const distanceRoutes = require('./routes/distanceRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -30,9 +31,14 @@ app.use(express.static('public'));
 // mongoose.connect("mongodb+srv://parveenprajapati6010:Parveen%406010@cluster0.wug4llz.mongodb.net/<database>")
 //   .then(() => console.log('MongoDB connected'))
 //   .catch(err => console.error('MongoDB connection error:', err));
-mongoose.connect('mongodb://localhost:27017/myapp', { useNewUrlParser: true, useUnifiedTopology: true })
+
+mongoose.connect("mongodb+srv://twigroup49:8LVUWqDNjvWzCsmS@intelligencelogistics.x5vex0i.mongodb.net/myapp")
   .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// mongoose.connect('mongodb://localhost:27017/myapp', { useNewUrlParser: true, useUnifiedTopology: true })
+//   .then(() => console.log('MongoDB connected'))
+//   .catch(err => console.log(err));
 
 // Load models
 require('./models/User');
@@ -64,6 +70,7 @@ app.use('/', billcreateRoutes);
 app.use('/', podRoutes);
 app.use('/', rateRoutes);
 app.use('/', unloadingRoutes);
+app.use('/', distanceRoutes);
 
 const port = 5000;
 

@@ -1,5 +1,4 @@
 
-
 const mongoose = require('mongoose');
 
 const partiesRegistrationSchema = new mongoose.Schema({
@@ -96,9 +95,7 @@ const partiesRegistrationSchema = new mongoose.Schema({
         cancelledChequeOrPassbook: String,
         remarks: String
     }
-
 });
-
 
 module.exports = mongoose.model('partiesRegistration', partiesRegistrationSchema);
 
