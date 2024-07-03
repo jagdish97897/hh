@@ -4,6 +4,7 @@ const VehiclePlacement = require('../models/VehiclePlacement');
 const createVehiclePlacement = async (req, res) => {
     try {
         const vehiclePlacement = new VehiclePlacement(req.body);
+        console.log(req)
         await vehiclePlacement.save();
         res.status(201).send(vehiclePlacement);
     } catch (error) {

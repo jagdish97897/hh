@@ -1,5 +1,4 @@
 // controllers/branchController.js
-
 const Branch = require('../models/Branch');
 
 const createBranch = async (req, res) => {
