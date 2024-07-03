@@ -1,14 +1,15 @@
 const mongoose = require('mongoose');
 const JobOrder = require('./JobOrder');
+const vehicleHireSchema = require('./VehicleHire');
 
 const { Schema } = mongoose;
 
 // Define schema for Charges
 const chargesSchema = new Schema({
-    sundry: { 
-        type: String, 
-        required: true, 
-        enum: ['STATISTICAL CHARGES', 'Loading Charge', 'OTHER CHARGES', 'LOADING DETENTION', 'ODC LENGTH'] 
+    sundry: {
+        type: String,
+        required: true,
+        enum: ['STATISTICAL CHARGES', 'Loading Charge', 'OTHER CHARGES', 'LOADING DETENTION', 'ODC LENGTH']
     },
     taxable: { type: Boolean, required: true, default: false },
     calcOn: { type: String, enum: ['FIXED'], required: true },
@@ -55,6 +56,7 @@ const goodsReceiptSchema = new mongoose.Schema({
     broker: { type: String },
     loadType: { type: String },
     charges: { type: [chargesSchema], required: false }, // Updated to an array of chargesSchema
+    vehicleHireCharges: { type: [vehicleHireSchema.charges], required: false }, // Updated to an array of chargesSchema
 
     container: {
         linename: { type: String },
@@ -68,19 +70,19 @@ const goodsReceiptSchema = new mongoose.Schema({
     cod: {
         favouring: { type: String },
         amount: { type: Number, default: 0 },
-        mode: { 
-            type: String, 
+        mode: {
+            type: String,
             enum: ['CHEQUE', 'ATM', 'CASH', 'DD', 'ECS', 'NEFT', 'IMPS', 'RTGS'],
             default: 'CASH'
         },
         cancelReason: { type: String },
     }
-   
+
 });
 
 // Middleware to auto-fill fields from JobOrder and calculate effective price
 goodsReceiptSchema.pre('save', async function (next) {
-    if (this.isNew) { 
+    if (this.isNew) {
         try {
             const jobOrder = await JobOrder.findOne({ jobOrder_no: this.jobOrder_no });
             if (!jobOrder) {

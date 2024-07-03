@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const JobOrder = require('./JobOrder'); // Import the JobOrder model
-const VehicleRegistration = require('./VehicleRegistation'); // Import the VehicleRegistration model
 
 // Define schema for VehiclePlacement
 const vehiclePlacementSchema = new mongoose.Schema({
@@ -46,7 +44,7 @@ const vehiclePlacementSchema = new mongoose.Schema({
         Mobile: { type: String, required: true },
         Email: { type: String, required: true },
         PAN: String,
-        photo:String,
+        photo: String,
         Remarks: String,
     }
 });
@@ -55,6 +53,13 @@ const vehiclePlacementSchema = new mongoose.Schema({
 vehiclePlacementSchema.pre('save', async function (next) {
     if (this.isNew) { // Only run this middleware when the document is new
         try {
+
+            const JobOrder = require('./JobOrder'); // Import the JobOrder model
+            const VehicleRegistration = require('./VehicleRegistation'); // Import the VehicleRegistration model
+
+
+
+
             const jobOrder = await JobOrder.findOne({ jobOrder_no: this.jobOrder_no });
             if (!jobOrder) {
                 return next(new Error('JobOrder not found'));

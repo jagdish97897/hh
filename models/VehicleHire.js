@@ -5,10 +5,10 @@ const { Schema } = mongoose;
 
 // Define schema for Charges
 const chargesSchema = new Schema({
-    sundry: { 
-        type: String, 
-        required: true, 
-        enum: ['Loading On Hire', 'Other Charges On Hire', 'TRANSACTION CHARGES', 'STAFF FUND', 'RTO'] 
+    sundry: {
+        type: String,
+        required: true,
+        enum: ['Loading On Hire', 'Other Charges On Hire', 'TRANSACTION CHARGES', 'STAFF FUND', 'RTO']
     },
     taxable: { type: Boolean, required: true, default: false },
     calcOn: { type: String, enum: ['FIXED'], required: true },

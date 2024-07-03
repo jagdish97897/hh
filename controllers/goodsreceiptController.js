@@ -1,5 +1,6 @@
 const GoodsReceipt = require('../models/GoodsReceipt');
 const VehicleHire = require('../models/VehicleHire');
+  
 // Create a new Goods Receipt
 const createGoodsReceipt = async (req, res) => {
     try {
@@ -105,33 +106,29 @@ const getGoodsReceiptByConsignmentNo = async (req, res) => {
 
 const updateGoodsReceipt = async (req, res) => {
     const { id } = req.params;
-    const { vehiclehire_no, jobOrder_no, indentNo, from, to, consignee, consignor, vehicle_placement_no, vehicleNo, broker, loadType, PAN } = req.body;
+    const { consignmentno, jobOrder_no, from, to, consignee, consignor, vehiclehire_no } = req.body;
 
     try {
-        if (!vehiclehire_no || !jobOrder_no || !indentNo || !from || !to || !consignee || !consignor) {
+        if (!consignmentno || !jobOrder_no || !from || !to || !consignee || !consignor) {
             return res.status(400).json({ errorMessage: 'Please provide all required fields' });
         }
 
         // Retrieve vehicle hire details if vehiclehire_no is provided
         let vehicleHireDetails = {};
         if (vehiclehire_no) {
-            vehicleHireDetails = await getVehicleHireDetails(vehiclehire_no);
+            vehicleHireDetails = await VehicleHire.findOne({vehiclehire_no});
         }
 
         // Update the fields with provided data and vehicle hire details
         const updatedFields = {
             jobOrder_no,
             vehiclehire_no,
-            PAN: vehicleHireDetails.PAN || PAN,
-            vehicle_placement_no,
-            vehicleNo,
-            broker,
-            loadType,
-            indentNo,
+            PAN: vehicleHireDetails.PAN,
             from,
             to,
             consignee,
             consignor,
+            vehicleHireCharges:vehicleHireDetails.charges,
         };
 
         // Find and update the goods receipt by ID
