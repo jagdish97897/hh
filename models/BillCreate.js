@@ -1,13 +1,49 @@
 
-
 const mongoose = require('mongoose');
-const Pod = require('./Pod'); 
+const GoodsReceipt = require('./GoodsReceipt'); 
+
+const { Schema } = mongoose;
+
+// Define schema for Charges
+const chargesSchema = new Schema({
+    sundry: {
+        type: String,
+        required: true,
+        enum: ['STATISTICAL CHARGES', 'Loading Charge', 'OTHER CHARGES', 'LOADING DETENTION', 'ODC LENGTH']
+    },
+    taxable: { type: Boolean, required: true, default: false },
+    calcOn: { type: String, enum: ['FIXED'], required: true },
+    addDed: { type: String, enum: ['A', 'D'], required: true },
+    rate: { type: Number, required: true, default: 0.00 },
+    amount: { type: Number, required: true, default: 0.00 },
+    gst: { type: Number, required: true, default: 0.00 },
+    total: { type: Number, required: true, default: 0.00 },
+    remarks: { type: String }
+});
+
+
+// Define schema for Charges
+const chargesbillSchema = new Schema({
+    sundry: {
+        type: String,
+        required: true,
+        enum: ['STATISTICAL CHARGES', 'Loading Charge', 'OTHER CHARGES', 'LOADING DETENTION', 'ODC LENGTH']
+    },
+    taxable: { type: Boolean, required: true, default: false },
+    calcOn: { type: String, enum: ['FIXED'], required: true },
+    addDed: { type: String, enum: ['A', 'D'], required: true },
+    rate: { type: Number, required: true, default: 0.00 },
+    amount: { type: Number, required: true, default: 0.00 },
+    gst: { type: Number, required: true, default: 0.00 },
+    total: { type: Number, required: true, default: 0.00 },
+    remarks: { type: String, required: false }
+});
+
 
 // Define schema for Goods Receipt
 const billSchema = new mongoose.Schema({
     billNo: { type: String, required: true },
-    podNo: { type: String, required: true },
-    consignmentno: { type: String },
+    consignmentno: { type: String, required: true },
     date: { type: Date },
     jobOrder_no: { type: String },
     customer: { type: String },
@@ -33,40 +69,45 @@ const billSchema = new mongoose.Schema({
     vehicle_placement_no: { type: String },
     vehicleNo: { type: String },
     broker: { type: String },
+    charges: { type: [chargesSchema] }, 
+    vehicleHireCharges: { type: [chargesSchema] }, 
+    billcharges: { type: [chargesbillSchema], required: false }
 });
 
-// Middleware to auto-fill fields from Pod and calculate effective price
+// Middleware to auto-fill fields from GoodsReceipt and calculate effective price
 billSchema.pre('save', async function (next) {
     if (this.isNew) {
         try {
-            const podDocument = await Pod.findOne({ podNo: this.podNo });
-            if (!podDocument) {
-                return next(new Error('Pod not found'));
+            const goodsReceipt = await GoodsReceipt.findOne({ consignmentno: this.consignmentno });
+            if (!goodsReceipt) {
+                return next(new Error('GoodsReceipt not found'));
             }
-            // Auto-fill fields from Pod
-            this.customer = podDocument.customer;
-            this.from = podDocument.from;
-            this.to = podDocument.to;
-            this.dimensions = podDocument.dimensions;
-            this.weight = podDocument.weight;
-            this.quantumrate = podDocument.quantumrate;
-            this.effectiverate = podDocument.effectiverate;
-            this.cost = podDocument.cost;
-            this.orderNo = podDocument.orderNo;
-            this.orderDate = podDocument.orderDate;
-            this.orderMode = podDocument.orderMode;
-            this.serviceMode = podDocument.serviceMode;
-            this.expectedDate = podDocument.expectedDate;
-            this.employee = podDocument.employee;
-            this.consignor = podDocument.consignor;
-            this.consignorGSTIN = podDocument.consignorGSTIN;
-            this.consignorAddress = podDocument.consignorAddress;
-            this.consignee = podDocument.consignee;
-            this.consigneeGSTIN = podDocument.consigneeGSTIN;
-            this.consigneeAddress = podDocument.consigneeAddress;
-            this.vehicle_placement_no = podDocument.vehicle_placement_no;
-            this.vehicleNo = podDocument.vehicleNo;
-            this.broker = podDocument.broker;
+            // Auto-fill fields from GoodsReceipt
+            this.customer = goodsReceipt.customer;
+            this.from = goodsReceipt.from;
+            this.to = goodsReceipt.to;
+            this.dimensions = goodsReceipt.dimensions;
+            this.weight = goodsReceipt.weight;
+            this.quantumrate = goodsReceipt.quantumrate;
+            this.effectiverate = goodsReceipt.effectiverate;
+            this.cost = goodsReceipt.cost;
+            this.orderNo = goodsReceipt.orderNo;
+            this.orderDate = goodsReceipt.orderDate;
+            this.orderMode = goodsReceipt.orderMode;
+            this.serviceMode = goodsReceipt.serviceMode;
+            this.expectedDate = goodsReceipt.expectedDate;
+            this.employee = goodsReceipt.employee;
+            this.consignor = goodsReceipt.consignor;
+            this.consignorGSTIN = goodsReceipt.consignorGSTIN;
+            this.consignorAddress = goodsReceipt.consignorAddress;
+            this.consignee = goodsReceipt.consignee;
+            this.consigneeGSTIN = goodsReceipt.consigneeGSTIN;
+            this.consigneeAddress = goodsReceipt.consigneeAddress;
+            this.vehicle_placement_no = goodsReceipt.vehicle_placement_no;
+            this.vehicleNo = goodsReceipt.vehicleNo;
+            this.broker = goodsReceipt.broker;
+            this.charges = goodsReceipt.charges;
+            this.vehicleHireCharges = goodsReceipt.vehicleHireCharges;
 
             next();
         } catch (error) {
@@ -78,6 +119,88 @@ billSchema.pre('save', async function (next) {
 });
 
 module.exports = mongoose.model('Billcreate', billSchema);
+
+
+
+
+// const mongoose = require('mongoose');
+// const Pod = require('./Pod'); 
+
+// // Define schema for Goods Receipt
+// const billSchema = new mongoose.Schema({
+//     billNo: { type: String, required: true },
+//     podNo: { type: String, required: true },
+//     consignmentno: { type: String },
+//     date: { type: Date },
+//     jobOrder_no: { type: String },
+//     customer: { type: String },
+//     from: { type: String },
+//     to: { type: String },
+//     weight: { type: String },
+//     quantumrate: { type: String },
+//     dimensions: { type: String },
+//     effectiverate: { type: String },
+//     cost: { type: String },
+//     orderNo: { type: String },
+//     orderDate: { type: Date },
+//     orderMode: { type: String },
+//     serviceMode: { type: String },
+//     expectedDate: { type: Date },
+//     employee: { type: String },
+//     consignor: { type: String },
+//     consignorGSTIN: { type: String },
+//     consignorAddress: { type: String },
+//     consignee: { type: String },
+//     consigneeGSTIN: { type: String },
+//     consigneeAddress: { type: String },
+//     vehicle_placement_no: { type: String },
+//     vehicleNo: { type: String },
+//     broker: { type: String },
+// });
+
+// // Middleware to auto-fill fields from Pod and calculate effective price
+// billSchema.pre('save', async function (next) {
+//     if (this.isNew) {
+//         try {
+//             const podDocument = await Pod.findOne({ podNo: this.podNo });
+//             if (!podDocument) {
+//                 return next(new Error('Pod not found'));
+//             }
+//             // Auto-fill fields from Pod
+//             this.customer = podDocument.customer;
+//             this.from = podDocument.from;
+//             this.to = podDocument.to;
+//             this.dimensions = podDocument.dimensions;
+//             this.weight = podDocument.weight;
+//             this.quantumrate = podDocument.quantumrate;
+//             this.effectiverate = podDocument.effectiverate;
+//             this.cost = podDocument.cost;
+//             this.orderNo = podDocument.orderNo;
+//             this.orderDate = podDocument.orderDate;
+//             this.orderMode = podDocument.orderMode;
+//             this.serviceMode = podDocument.serviceMode;
+//             this.expectedDate = podDocument.expectedDate;
+//             this.employee = podDocument.employee;
+//             this.consignor = podDocument.consignor;
+//             this.consignorGSTIN = podDocument.consignorGSTIN;
+//             this.consignorAddress = podDocument.consignorAddress;
+//             this.consignee = podDocument.consignee;
+//             this.consigneeGSTIN = podDocument.consigneeGSTIN;
+//             this.consigneeAddress = podDocument.consigneeAddress;
+//             this.vehicle_placement_no = podDocument.vehicle_placement_no;
+//             this.vehicleNo = podDocument.vehicleNo;
+//             this.broker = podDocument.broker;
+
+//             next();
+//         } catch (error) {
+//             next(error);
+//         }
+//     } else {
+//         next();
+//     }
+// });
+
+// module.exports = mongoose.model('Billcreate', billSchema);
 
 
 // const mongoose = require('mongoose');

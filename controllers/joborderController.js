@@ -123,6 +123,7 @@ const updateJobOrderById = async (req, res) => {
       vehicleNo: vehicleDetails.vehicleNo || vehicleNo,
       broker: vehicleDetails.broker || broker,
       loadType: vehicleDetails.loadType || loadType,
+      paymentto: vehicleDetails.paymentto || paymentto,
       indentNo,
       from,
       to,
@@ -169,7 +170,8 @@ const getVehicleDetails = async (vehicle_placement_no) => {
     return {
       vehicleNo: vehiclePlacement.vehicleNo,
       broker: vehiclePlacement.broker,
-      loadType: vehiclePlacement.loadType 
+      loadType: vehiclePlacement.loadType,
+      paymentto: vehiclePlacement.paymentto 
     };
   }
   throw new Error('VehiclePlacement not found');

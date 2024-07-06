@@ -1,6 +1,5 @@
 
 const partiesRegistration = require('../models/Parties');
-
 // Controller function to create a new customer registration
 const allpartiesRegistration = async (req, res) => {
     try {
@@ -104,7 +103,6 @@ const allpartiesRegistration = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
-
 const getNotifierNames = async (req, res) => {
     try {
         // Find all documents in the collection
