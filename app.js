@@ -46,7 +46,7 @@ require('./models/User');
 
 app.use(
   cors({
-    origin: 'http://localhost:3000' // Allow requests from this origin
+    origin: 'https://precious-biscotti-6171f1.netlify.app' // Allow requests from this origin
   })
 );
 
