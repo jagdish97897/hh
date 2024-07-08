@@ -9,12 +9,16 @@ const vehiclePlacementSchema = new mongoose.Schema({
     vehicleNo: { type: String, required: true },
 
     broker: { type: String },
+    driver: { type: String },
     owner: { type: String },
     loadType: { type: String },
+    vehicleType: { type: String },
     ownerPhone: { type: String },
     brokerPhone: { type: String },
     // Fields to be auto-filled from JobOrder
     customer: { type: String },
+    customerGSTIN: { type: String },
+    customerAddress: { type: String },
     dimensions: { type: String },
     from: { type: String },
     to: { type: String },
@@ -72,6 +76,8 @@ vehiclePlacementSchema.pre('save', async function (next) {
 
             // Auto-fill fields from JobOrder
             this.customer = jobOrder.customer;
+            this.customerGSTIN = jobOrder.customerGSTIN;
+            this.customerAddress = jobOrder.customerAddress;
             this.from = jobOrder.from;
             this.to = jobOrder.to;
             this.orderNo = jobOrder.orderNo;
@@ -89,8 +95,10 @@ vehiclePlacementSchema.pre('save', async function (next) {
 
             // Auto-fill fields from VehicleRegistration
             this.broker = vehicleRegistration.broker;
+            this.driver = vehicleRegistration.driver;
             this.owner = vehicleRegistration.owner;
             this.loadType = vehicleRegistration.loadType;
+            this.vehicleType = vehicleRegistration.vehicleType;
 
             next();
         } catch (error) {

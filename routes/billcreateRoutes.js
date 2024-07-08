@@ -12,7 +12,7 @@ router.get('/getbills', billController.getAllBills);
 router.get('/bills/:id', billController.getBillById);
 
 // Route to update a bill entry by ID
-router.put('/bills/:id', billController.updateBill);
+router.patch('/bills/:id', billController.updateBill);
 
 // Route to delete a bill entry by ID
 router.delete('/bills/:id', billController.deleteBill);

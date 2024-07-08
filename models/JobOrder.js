@@ -13,6 +13,7 @@ const jobOrderSchema = new Schema({
   vehicleNo: { type: String },
   broker: { type: String },
   loadType: { type: String },
+  paymentto: { type: String },
 
 
   consignor: { type: String },
@@ -21,6 +22,8 @@ const jobOrderSchema = new Schema({
   consignee: { type: String },
   consigneeGSTIN: { type: String }, // New field for consignee GSTIN
   consigneeAddress: { type: String }, // New field for consignee address
+  PAN: { type: String }, 
+  
   indentNo: { type: String, required: true }, // Use indentNo for reference
   // Fields to be auto-filled from Indent
   customer: { type: String },
@@ -113,6 +116,7 @@ jobOrderSchema.pre('save', async function (next) {
         }
         this.consigneeGSTIN = consigneeData.gst.GSTIN; // Auto-fill consignee GSTIN
         this.consigneeAddress = consigneeData.contact.Address; // Auto-fill consignee address
+        this.PAN = consigneeData.tds.PAN; // Auto-fill consignee address
       }
 
       if (this.vehicle_placement_no) {
@@ -121,6 +125,7 @@ jobOrderSchema.pre('save', async function (next) {
           this.vehicleNo = vehiclePlacement.vehicleNo;
           this.broker = vehiclePlacement.broker;
           this.loadType = vehiclePlacement.loadType;
+          this.paymentto = vehiclePlacement.paymentto;
         } else {
           return next(new Error('VehiclePlacement not found'));
         }

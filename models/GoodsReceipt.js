@@ -25,7 +25,7 @@ const chargesSchema = new Schema({
 const goodsReceiptSchema = new mongoose.Schema({
     consignmentno: { type: String, required: true },
     vehiclehire_no: { type: String },
-    PAN: { type: String },
+
 
     jobOrder_no: { type: String, required: true },
     date: { type: Date, required: true },
@@ -51,10 +51,12 @@ const goodsReceiptSchema = new mongoose.Schema({
     consignee: { type: String },
     consigneeGSTIN: { type: String },
     consigneeAddress: { type: String },
+    PAN: { type: String },
     vehicle_placement_no: { type: String },
     vehicleNo: { type: String },
     broker: { type: String },
     loadType: { type: String },
+    paymentto: { type: String },
     charges: { type: [chargesSchema], required: false }, // Updated to an array of chargesSchema
     vehicleHireCharges: { type: [vehicleHireSchema.charges], required: false }, // Updated to an array of chargesSchema
 
@@ -111,10 +113,12 @@ goodsReceiptSchema.pre('save', async function (next) {
             this.consignee = jobOrder.consignee;
             this.consigneeGSTIN = jobOrder.consigneeGSTIN;
             this.consigneeAddress = jobOrder.consigneeAddress;
+            this.PAN = jobOrder.PAN;
             this.vehicle_placement_no = jobOrder.vehicle_placement_no;
             this.vehicleNo = jobOrder.vehicleNo;
             this.broker = jobOrder.broker;
             this.loadType = jobOrder.loadType;
+            this.paymentto = jobOrder.paymentto;
 
 
             next();

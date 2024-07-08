@@ -123,7 +123,6 @@ const updateGoodsReceipt = async (req, res) => {
         const updatedFields = {
             jobOrder_no,
             vehiclehire_no,
-            PAN: vehicleHireDetails.PAN,
             from,
             to,
             consignee,

@@ -4,7 +4,7 @@ const branchController = require('../controllers/branchController');
 
 // Route to add a new branch
 router.post('/addbranch', branchController.createBranch);
-router.get('/getAllBranches', branchController.getAllBranches)
+router.get('/getAllBranches', branchController.getAllBranches);
 router.get('/branches/:branchName', branchController.getBranchByName);
 module.exports = router;
 

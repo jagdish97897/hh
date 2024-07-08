@@ -13,7 +13,7 @@ router.get('/vehicle-hires/:id', vehicleHireController.getVehicleHireById);
 
 router.get('/vehicleHires/vehiclehire_no/:vehiclehire_no', vehicleHireController.getVehicleDetailsByVehicleHireNo);
 // Update a vehicle hire entry by ID
-router.put('/vehicle-hires/:id', vehicleHireController.updateVehicleHire);
+router.patch('/vehicle-hires/:id', vehicleHireController.updateVehicleHire);
 
 // Delete a vehicle hire entry by ID
 router.delete('/vehicle-hires/:id', vehicleHireController.deleteVehicleHire);

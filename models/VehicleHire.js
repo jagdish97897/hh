@@ -25,9 +25,7 @@ const vehicleHireSchema = new Schema({
     vehiclehire_no: { type: String, required: true },
     consignmentno: { type: String, required: true },
     type: { type: String, enum: ['PICKUP', 'DELIVERY', 'SUPPLYMENTRY'], required: true },
-    payto: { type: String, enum: ['OWNER', 'TRANSPORTER'], required: true },
     state: { type: String },
-    PAN: { type: String },
     date: { type: Date },
     jobOrder_no: { type: String },
     customer: { type: String },
@@ -50,10 +48,12 @@ const vehicleHireSchema = new Schema({
     consignee: { type: String },
     consigneeGSTIN: { type: String },
     consigneeAddress: { type: String },
+    PAN: { type: String },
     vehicle_placement_no: { type: String },
     vehicleNo: { type: String },
     broker: { type: String },
     loadType: { type: String },
+    paymentto: { type: String },
     charges: { type: [chargesSchema], required: false } // Updated to an array of chargesSchema
 });
 
@@ -86,10 +86,12 @@ vehicleHireSchema.pre('save', async function (next) {
             this.consignee = goodsReceipt.consignee;
             this.consigneeGSTIN = goodsReceipt.consigneeGSTIN;
             this.consigneeAddress = goodsReceipt.consigneeAddress;
+            this.PAN = goodsReceipt.PAN;
             this.vehicle_placement_no = goodsReceipt.vehicle_placement_no;
             this.vehicleNo = goodsReceipt.vehicleNo;
             this.broker = goodsReceipt.broker;
             this.loadType = goodsReceipt.loadType;
+            this.paymentto = goodsReceipt.paymentto;
 
             next();
         } catch (error) {
